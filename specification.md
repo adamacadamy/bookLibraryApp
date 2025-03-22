@@ -17,12 +17,16 @@ A Book Library App is a software application designed to manage a collection of 
 
 - `id` (Primary Key)
 - `author` (String Unique)
+- `description` (Text)
+- `image` (Text)
 - `isbn` (String Unique)
 - `available` (Bool)
 - `borrowed_by` (Foreign Key)
+- `borrowed_unilt` (Date)
 
 
 ## 2. Activities [BL(Business Logic)]
+
 - Register User by admin
 - Add, Delete, Update a book as an admin
 - Read/View Books as guest, admin or user
@@ -31,38 +35,49 @@ A Book Library App is a software application designed to manage a collection of 
 
 ## 3. REST API
 
-## 3.1 User management Endpoints  
- 
+## 3.1 User management Endpoints  [ Users.py]
+
 | Method | Path         | Description             | Roles               |
 |--------|--------------|-------------------------|---------------------|
-| POST   | `/register`  | Register a new user     | Admin               |
-| POST   | `/update`    | Register a new user     | Admin               |
-| POST   | `/delete`    | Register a new user     | Admin               |
-| POST   | `/view`      | Register a new user     | Admin               |
-| POST   | `/login`     | Authenticate user       | Admin, Guest, User  |  
+| POST   | `/user`      | Register a new user     | Admin               |
+| GET    | `/user`      | List users              | Admin, User         |
 
 
-## 3.2 Book CREATE AND READ Endpoints [ books_list.py]
+## 3.2 User UPDATE AND DELETE Endpoints  [ Users.py]
+
+| Method | Path                     | Description             | Roles               |
+|--------|--------------------------|-------------------------|---------------------|
+| PUT    | `/user/<int:book_id>`    | Update a User           | Admin, User         |
+| Delete | `/user/<int:book_id>`    | Delete a User           | Admin, User         |
+
+
+## 3.3 Book CREATE AND READ Endpoints [ books.py]
 
 | Method  | Path                   | Description              | Roles              |
 |---------|------------------------|--------------------------|--------------------|
 | POST    | `/book`                | Register a new book      | Admin              |
 | GET     | `/book`                | View list of books       | Admin, Guest, User |
 
-## 3.3 Book UPDATE AND DELETE Endpoints 
+## 3.4 Book UPDATE AND DELETE Endpoints  [ books.py]
 
 | Method  | Path                   | Description              | Roles              |
 |---------|------------------------|--------------------------|--------------------|
 | PUT     | `/book/<int:book_id>`  | Update a book            | Admin              |
 | DELETE  | `/book/<int:book_id>`  | Delete a book            | Admin              |
 
-## 3.3 Book BARROW AND RETURN Endpoints  
+## 3.5 Book BARROW AND RETURN Endpoints  [ books.py]
 
 | Method  | Path                   | Description              | Roles              |
 |---------|------------------------|--------------------------|--------------------|
 | POST    | `/barrow/<int:book_id>`| Borrow a book            | User               |
 | POST    | `/return/<int:book_id>`| Return a book            | User               |
 
+# 3.6 Auth Management [ Auth.py]
+
+| Method | Path         | Description             | Roles               |
+|--------|--------------|-------------------------|---------------------|
+| POST   | `/login`     |  De-Authenticate user   | Admin, User         |
+| POST   | `/logout`    |  Authenticate user      | Admin, User         |  
 
 ## 3.4 Schemas
 
@@ -81,18 +96,26 @@ A Book Library App is a software application designed to manage a collection of 
 
 ### 3.4.3 Book Schema
 
-- `id` (Integer, ReadOnly)
-- `title` (String, Required)
-- `author` (String, Required)
-- `isbn` (String, Required)
-- `available` (Boolean, ReadOnly)
-- `borrowed_by` (Integer, ReadOnly)
+- `book_schema_parser` (Parser, Required)
+  - `id` (Integer, ReadOnly)
+  - `title` (String, Required)
+  - `description`  (String, Required)
+  - `image` (String, Required)
+  - `author` (String, Required)
+  - `isbn` (String, Required)
+  - `available` (Boolean, ReadOnly)
+  - `borrowed_by` (Integer, ReadOnly)
+  - `borrowed_unilt` (FileStorage, ReadOnly)
 
 #### 3.4.4 Book Request Schema
 
-- `title` (String, Required)
-- `author` (String, Required)
-- `isbn` (String, Required)
+- `book_request_schema_parser` (Parser, Required)
+  - `title` (String, Required)
+  - `author` (String, Required)
+  - `description`  (String, Required)
+  - `image` (String, Required)
+  - `isbn` (String, Required)
+
 
 #### 3.4.5 Book Response Schema
 
@@ -111,6 +134,15 @@ A Book Library App is a software application designed to manage a collection of 
 - `message` (String, Required)
 - `user` (String, Required)
 - `book` (String, Required)
+- `borrowed_unilt`  (Date, Required)
+
+#### 3.4.7 Book Image Schema
+
+- `upload_parser` (Parser, Required)
+  
+  - `image` (FileStorage)  
+  - `name`  (String, Required)  
+  - `email` (String, Required, Unique)
 
 
 ## 5. Scaffold Structure
@@ -134,9 +166,7 @@ book-library-app/
 │   ├── routes/              # Application routes
 │   │   ├── __init__.py      # Initialize routes
 │   │   ├── auth.py          # Authentication routes
-|   |   ├── book_items.py    # Book update and delete
-|   |   ├── books_list.pyy   # Book create and view
-|   |   ├── book_cycle.py    # Book borrow and return
+|   |   ├── book.py    # Book borrow and return
 |   |   ├── users.py         # User crud
 │   ├── schemas/             # API schemas
 │   │   ├── __init__.py      # Initialize schemas

@@ -19,9 +19,7 @@
         "routes": {
             "__init__.py": "",
             "auth.py": "",
-            "book_items.py": "",
-            "books_list.py": "",
-            "book_cycle.py": "",
+            "book.py": "",
             "users.py": ""
         },
         "schemas": {
@@ -35,5 +33,3 @@
     "run.py": "",
     "README.md": ""
 }
-
-
