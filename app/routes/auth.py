@@ -17,6 +17,7 @@ class Login(Resource):
     @auth_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
     @auth_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
     def post(self) -> tuple[dict, int]:
+        """Log in a user and generate an authentication token."""
         data = request.json
         username = data.get("username")
         password = data.get("password")
@@ -39,5 +40,6 @@ class Logout(Resource):
     @auth_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
     def get(self) -> tuple[dict, int]:
+        """Log out an admin user (admin only)."""
         logout_user()
         return {"success": True, "message": "Logged out successfully"}, HTTPStatus.OK

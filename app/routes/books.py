@@ -3,9 +3,8 @@ import logging
 import mimetypes
 import os
 from flask_restx import Namespace, Resource
-from flask import Response, g, request, send_file
+from flask import Response, g, request
 
-from app.config.uploads import UPLOAD_FOLDER
 from app.models.books import Book
 from app.models import db
 from app.models.user import User
@@ -20,34 +19,29 @@ from app.schemas.book_schema import (
 from app.models.user import UserRole
 
 from app.utils.auth_utils import auth_required
-from app.utils.files import save_file_to_upload_folder
-
+from app.utils.files import is_allowed_file
 
 # Correct the logging level
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-books_ns = Namespace("Book", description="Book  management")
+books_ns = Namespace("Book", description="Book management")
 
 
 # /api/Book/?page=1&per_page=10
-# /api/Book/?title=Harry&author=Rowling&genre=Fantasy.
-# /api/Book/?page=1&per_page=10&title=Harry&author=Rowling&genre=Fantasy.
+# /api/Book/?title=Harry&author=Rowling&genre=Fantasy
+# /api/Book/?page=1&per_page=10&title=Harry&author=Rowling&genre=Fantasy
 @books_ns.route("/")
 class BooksList(Resource):
     @books_ns.response(HTTPStatus.OK, "Books retrieved", book_list_schema)
     def get(self) -> Response:
-        # Get query parameters for pagination
+        """Retrieve a list of books with pagination and filtering."""
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
-
-        # Get query parameters for filtering
         title = request.args.get("title", type=str)
         author = request.args.get("author", type=str)
         genre = request.args.get("genre", type=str)
 
-        # Build the query with optional filters
         query = Book.query
         if title:
             query = query.filter(Book.title.ilike(f"%{title}%"))
@@ -56,7 +50,6 @@ class BooksList(Resource):
         if genre:
             query = query.filter(Book.genre.ilike(f"%{genre}%"))
 
-        # Apply pagination
         books_query = query.paginate(page=page, per_page=per_page, error_out=False)
         books = books_query.items
 
@@ -77,11 +70,19 @@ class BooksList(Resource):
     @books_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
     def post(self) -> Response:
+        """Add a new book to the database (admin only)."""
         try:
-            # Save the file
+
             args = book_schema_parser.parse_args()
+
             image_file = args["image"]
-            image = save_file_to_upload_folder(image_file)  # URL to access the image
+            if not is_allowed_file(image_file.filename):
+                return {
+                    "success": False,
+                    "message": "Invalid file type. Allowed types are: png, jpg, jpeg, gif.",
+                }, HTTPStatus.BAD_REQUEST
+
+            image_data = image_file.read()
             title = args["title"]
             author = args["author"]
             description = args["description"]
@@ -92,11 +93,12 @@ class BooksList(Resource):
                 author=author,
                 description=description,
                 isbn=isbn,
-                image=image,
+                image=image_data,
             )
             db.session.add(book)
             db.session.commit()
-            return {"success": True, "data": book.to_dict()}, HTTPStatus.OK
+
+            return {"success": True, "data": book.to_dict()}, HTTPStatus.CREATED
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
             return {
@@ -105,15 +107,16 @@ class BooksList(Resource):
             }, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-@books_ns.route("/<int:id>")
+@books_ns.route("/<int:book_id>")
 class BooksResource(Resource):
     @books_ns.response(HTTPStatus.OK, "Book retrieved", book_response_schema)
     @books_ns.response(HTTPStatus.NOT_FOUND, "Book not found")
     @books_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
     @books_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
-    def get(self, id: int) -> Response:
-        book = Book.query.get(id)
+    def get(self, book_id: int) -> Response:
+        """Retrieve a specific book by ID."""
+        book = Book.query.get(book_id)
         if book:
             return {"success": True, "data": book.to_dict()}, HTTPStatus.OK
         return {"success": False, "message": "Book not found"}, HTTPStatus.NOT_FOUND
@@ -125,13 +128,14 @@ class BooksResource(Resource):
     @books_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server issue")
     @books_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
-    def put(self, id: int) -> Response:
-        args = book_schema_parser.parse_args()
-        book = Book.query.get(id)
+    def put(self, book_id: int) -> Response:
+        """Update an existing book (admin only)."""
+        args = book_request_schema_parser.parse_args()
+        book = Book.query.get(book_id)
         try:
             if book:
                 if image := args.get("image"):
-                    book.image = save_file_to_upload_folder(image)
+                    book.image = image.read()
                 if title := args.get("title"):
                     book.title = title
                 if author := args.get("author"):
@@ -158,6 +162,7 @@ class BooksResource(Resource):
     @books_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
     def delete(self, id: int) -> Response:
+        """Delete a book from the database (admin only)."""
         book = Book.query.get(id)
         if book:
             db.session.delete(book)
@@ -166,25 +171,23 @@ class BooksResource(Resource):
         return {"success": False, "message": "Book not found"}, HTTPStatus.NOT_FOUND
 
 
-@books_ns.route("/images/<string:filename>")
+@books_ns.route("/<int:book_id>/image")
 class BookServeImage(Resource):
-    @books_ns.response(HTTPStatus.OK, "Image retrieved")
+    @books_ns.response(
+        HTTPStatus.OK, "Image retrieved as binary data (e.g., image/jpeg)"
+    )
     @books_ns.response(HTTPStatus.NOT_FOUND, "Image not found")
     @books_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server issue")
-    def get(self, filename: str) -> Response:
+    @books_ns.produces(["image/jpeg"])  # Specify the MIME type of the response
+    def get(self, book_id: int) -> Response:
+        """Serve the image of a specific book."""
+        book = Book.query.get(book_id)
+        if not book:
+            return {"message": "Book not found"}, HTTPStatus.NOT_FOUND
+
         try:
-            # Construct the full path to the image
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-
-            # Check if the file exists
-            if not os.path.exists(file_path):
-                return {"message": "Image not found"}, HTTPStatus.NOT_FOUND
-
-            # Determine the MIME type based on the file extension
-            mime_type, _ = mimetypes.guess_type(file_path)
-
-            # Serve the image file
-            return send_file(file_path, mimetype=mime_type)
+            mime_type = "image/jpeg"
+            return Response(book.image, mimetype=mime_type)
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
             return {
@@ -192,7 +195,7 @@ class BookServeImage(Resource):
             }, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-@books_ns.route("/barrow/<int:book_id>")
+@books_ns.route("/<int:book_id>/barrow")
 class BookBorrowResrouce(Resource):
     @books_ns.response(HTTPStatus.CREATED, "Book borrowed", book_borrow_schema)
     @books_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
@@ -200,7 +203,8 @@ class BookBorrowResrouce(Resource):
     @books_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server issue")
     @books_ns.doc(security=["basic, jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
-    def update(self, book_id: int) -> Response:
+    def put(self, book_id: int) -> Response:
+        """Borrow a book from the library."""
         try:
             args = book_schema_parser.parse_args()
             book = Book.query.get(book_id)
@@ -225,7 +229,7 @@ class BookBorrowResrouce(Resource):
         return {"message": "Book not found"}, HTTPStatus.NOT_FOUND
 
 
-@books_ns.route("/return/<int:id>")
+@books_ns.route("/<int:book_id>/return")
 class BookReturnResrouce(Resource):
     @books_ns.response(HTTPStatus.CREATED, "Book returned")
     @books_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
@@ -233,7 +237,8 @@ class BookReturnResrouce(Resource):
     @books_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server issue")
     @books_ns.doc(security=["basic, jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
-    def update(self, id: int) -> Response:
+    def put(self, id: int) -> Response:
+        """Return a borrowed book to the library."""
         book = Book.query.get(id)
         if book:
             book.borrowed_by = None

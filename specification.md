@@ -64,9 +64,9 @@ A Book Library App is a software application designed to manage a collection of 
 |---------|-------------------------------------|--------------------------|--------------------|
 | PUT     | `/book/<int:book_id>`               | Update a book            | Admin              |
 | DELETE  | `/book/<int:book_id>`               | Delete a book            | Admin              |
-| POST    | `/book/images/<string:filename>`    |  De-Authenticate user    | Admin, User        |
-| POST    | `/book/barrow/<int:book_id>`        | Borrow a book            | User               |
-| POST    | `/book/return/<int:book_id>`        | Return a book            | User               |
+| POST    | `/book/<int:book_id>/image`         |  De-Authenticate user    | Admin, User        |
+| POST    | `/book/<int:book_id>/barrow`        | Borrow a book            | User               |
+| POST    | `/book/<int:book_id>/return`        | Return a book            | User               |
  
 # 3.5 Auth Management [ Auth.py]
 
@@ -163,7 +163,6 @@ A Book Library App is a software application designed to manage a collection of 
 #### 3.4.12 Book Image Schema
 
 - `upload_parser` (Parser, Required)
-  
   - `image` (FileStorage)  
   - `name`  (String, Required)  
   - `email` (String, Required, Unique)
@@ -203,6 +202,7 @@ book-library-app/
 ```
 
 ## 6. JSON  version of the scaffold
+
 ```json
 {
     ".gitignore": "",
@@ -237,13 +237,14 @@ book-library-app/
         }
     },
     "migrations": {},
-    "requirements.txt": "alembic==1.14.0\naniso8601==9.0.1\nattrs==24.3.0\nblinker==1.9.0\nclick==8.1.7\nFlask==2.2.5\nFlask-HTTPAuth==4.8.0\nFlask-JWT-Extended==4.4.4\nFlask-Login==0.6.3\nFlask-Migrate==4.0.4\nflask-restx==1.3.0\nFlask-SQLAlchemy==3.1.1\nFlask-WTF==1.2.2\ngreenlet==3.1.1\nimportlib_resources==6.4.5\nitsdangerous==2.2.0\nJinja2==3.1.4\njsonschema==4.23.0\njsonschema-specifications==2024.10.1\nMako==1.3.8\nMarkupSafe==3.0.2\nmysql-connector-python==8.0.33\nmysqlclient==2.2.7\nprotobuf==3.20.3\nPyJWT==2.10.1\nPyMySQL==1.1.1\npython-dotenv==1.0.0\npytz==2024.2\nreferencing==0.35.1\nrpds-py==0.22.3\nSQLAlchemy==2.0.36\ntyping_extensions==4.12.2\nWerkzeug==3.1.3\nWTForms==3.2.1",
+    "requirements.txt": "",
     "run.py": "",
     "README.md": ""
 }
 ```
 
 ## 8. Run Scaffold generator
+
 ```python
 python3 create_flask_project.py book_library_structure.json -d book-library-app
 ```

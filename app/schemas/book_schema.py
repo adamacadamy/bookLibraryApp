@@ -3,22 +3,10 @@ from werkzeug.datastructures import FileStorage
 
 
 from app.schemas import api
-from app.utils.date_utils import date_type
 
 book_schema_parser = reqparse.RequestParser()
 
-book_upload_model = api.model(
-    "BookUploadModel",
-    {
-        "title": fields.String(required=True, description="Book title"),
-        "description": fields.String(required=True, description="Book description"),
-        "image": fields.Raw(
-            required=True, description="Image file (multipart/form-data)"
-        ),
-        "author": fields.String(required=True, description="Book author"),
-        "isbn": fields.String(required=True, description="Book ISBN number"),
-    },
-)
+
 book_request_schema_parser = reqparse.RequestParser()
 
 book_schema_parser.add_argument(

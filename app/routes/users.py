@@ -13,7 +13,7 @@ from app.models.user import User, UserRole
 from app.utils.auth_utils import auth_required
 from app.utils.emai import send_registration_email
 
-users_ns = Namespace("User", description="User  management")
+users_ns = Namespace("User", description="User management")
 
 
 @users_ns.route("/")
@@ -22,16 +22,13 @@ class UsersList(Resource):
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
     def get(self) -> Response:
-        # Get query parameters for pagination
+        """Retrieve a list of users with pagination and filtering."""
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
-
-        # Get query parameters for filtering
         username = request.args.get("username", type=str)
         email = request.args.get("email", type=str)
         role = request.args.get("role", type=str)
 
-        # Build the query with optional filters
         query = User.query
         if username:
             query = query.filter(User.username.ilike(f"%{username}%"))
@@ -40,7 +37,6 @@ class UsersList(Resource):
         if role:
             query = query.filter(User.role.ilike(f"%{role}%"))
 
-        # Apply pagination
         users_query = query.paginate(page=page, per_page=per_page, error_out=False)
         users = users_query.items
 
@@ -62,6 +58,7 @@ class UsersList(Resource):
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
     def post(self) -> Response:
+        """Add a new user to the database (admin only)."""
         data = request.json
         if "password" not in data:
             data["password"] = User.generate_random_password()
@@ -84,7 +81,6 @@ class UsersList(Resource):
 
 @users_ns.route("/<int:id>")
 class UsersResource(Resource):
-
     @users_ns.response(HTTPStatus.OK, "User found", user_schema)
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
     @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
@@ -92,6 +88,7 @@ class UsersResource(Resource):
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
     def get(self, id: int) -> Response:
+        """Retrieve a specific user by ID."""
         user = User.load_user(id)
 
         if user.role != UserRole.ADMIN or user.id != id:
@@ -109,6 +106,7 @@ class UsersResource(Resource):
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
     def put(self, id: int) -> Response:
+        """Update an existing user."""
         user = User.load_user(id)
         data = request.json
         if not user:
@@ -127,12 +125,13 @@ class UsersResource(Resource):
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
     def delete(self, id: int) -> Response:
+        """Delete a user from the database (admin only)."""
         user = User.load_user(id)
         if not user:
             return {"message": "User not found"}, HTTPStatus.NOT_FOUND
 
         if user.role == UserRole.ADMIN:
-            return {"message": "Forbidden"}, HTTPStatus
+            return {"message": "Forbidden"}, HTTPStatus.FORBIDDEN
         db.session.delete(user)
         db.session.commit()
         return {"success": True}, HTTPStatus.NO_CONTENT
