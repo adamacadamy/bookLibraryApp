@@ -205,7 +205,7 @@ class BookBorrowResrouce(Resource):
         try:
             args = book_schema_parser.parse_args()
             book = Book.query.get(book_id)
-            user_id = g.current_user["id"]
+            user_id = g.current_user["user_id"]
             user = User.query.get(user_id)
             if book and user:
                 book.borrowed_by = user.id

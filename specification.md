@@ -35,47 +35,39 @@ A Book Library App is a software application designed to manage a collection of 
 
 ## 3. REST API
 
-## 3.1 User management Endpoints  [ Users.py]
-
-| Method | Path         | Description             | Roles               |
-|--------|--------------|-------------------------|---------------------|
-| POST   | `/user`      | Register a new user     | Admin               |
-| GET    | `/user`      | List users              | Admin, User         |
-
-
-## 3.2 User UPDATE AND DELETE Endpoints  [ Users.py]
+## 3.1 User UPDATE AND DELETE Endpoints  [ users.py]
 
 | Method | Path                     | Description             | Roles               |
 |--------|--------------------------|-------------------------|---------------------|
-| PUT    | `/user/<int:book_id>`    | Update a User           | Admin, User         |
-| Delete | `/user/<int:book_id>`    | Delete a User           | Admin, User         |
+| POST   | `/users`                 | Register a new user     | Admin               |
+| GET    | `/users`                 | View list of users      | Admin               |
+| PUT    | `/users/<int:user_id>`   | Update a User  account  | Admin               |
+| Delete | `/users/<int:user_id>`   | Delete a User  account  | Admin               |
+| PUT    | `/users/me`              | Update my User account  | Admin, User         |
+| Delete | `/users/me`              | Delete my User account  | Admin, USER         |
 
 
 ## 3.3 Book CREATE AND READ Endpoints [ books.py]
 
-| Method  | Path                   | Description              | Roles              |
-|---------|------------------------|--------------------------|--------------------|
-| POST    | `/book`                | Register a new book      | Admin              |
-| GET     | `/book`                | View list of books       | Admin, Guest, User |
+| Method  | Path                                 | Description              | Roles              |
+|---------|--------------------------------------|--------------------------|--------------------|
+| POST    | `/books`                             | Register a new book      | Admin              |
+| GET     | `/books`                             | View list of books       | Admin, Guest, User |
+| PUT     | `/books/<int:book_id>`               | Update a book            | Admin              |
+| DELETE  | `/books/<int:book_id>`               | Delete a book            | Admin              |
+| POST    | `/books/<int:book_id>/image`         | De-Authenticate user     | Admin, User        |
+| POST    | `/books/<int:book_id>/barrow`        | Borrow a book            | User               |
+| POST    | `/books/<int:book_id>/return`        | Return a book            | User               |
 
-## 3.4 Book UPDATE AND DELETE Endpoints  [ books.py]
 
-| Method  | Path                                | Description              | Roles              |
-|---------|-------------------------------------|--------------------------|--------------------|
-| PUT     | `/book/<int:book_id>`               | Update a book            | Admin              |
-| DELETE  | `/book/<int:book_id>`               | Delete a book            | Admin              |
-| POST    | `/book/<int:book_id>/image`         |  De-Authenticate user    | Admin, User        |
-| POST    | `/book/<int:book_id>/barrow`        | Borrow a book            | User               |
-| POST    | `/book/<int:book_id>/return`        | Return a book            | User               |
- 
-# 3.5 Auth Management [ Auth.py]
+# 3.4 Auth Management [ auth.py]
 
 | Method | Path         | Description             | Roles               |
 |--------|--------------|-------------------------|---------------------|
 | POST   | `/login`     |  De-Authenticate user   | Admin, User         |
 | POST   | `/logout`    |  Authenticate user      | Admin, User         |  
 
- 
+
 
 ## 3.4 Schemas
 

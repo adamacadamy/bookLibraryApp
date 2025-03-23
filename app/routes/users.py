@@ -1,11 +1,12 @@
 from http import HTTPStatus
 from flask_restx import Namespace, Resource
-from flask import Response, request
+from flask import Response, g, request
 
 from app.schemas.user_schema import (
     user_response_schema,
     user_request_model_schema,
     user_schema,
+    user_update_request_model_schema,
 )
 from app.models import db
 from app.models.user import User, UserRole
@@ -79,24 +80,9 @@ class UsersList(Resource):
         return {"success": True, "data": user.to_dict()}, HTTPStatus.CREATED
 
 
-@users_ns.route("/<int:id>")
-class UsersResource(Resource):
-    @users_ns.response(HTTPStatus.OK, "User found", user_schema)
-    @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
-    @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
-    @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
-    @users_ns.doc(security=["basic", "jwt"])
-    @auth_required([UserRole.ADMIN, UserRole.USER])
-    def get(self, id: int) -> Response:
-        """Retrieve a specific user by ID."""
-        user = User.load_user(id)
-
-        if user.role != UserRole.ADMIN or user.id != id:
-            return {"message": "Unauthorized"}, HTTPStatus.UNAUTHORIZED
-
-        return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
-
-    @users_ns.expect(user_request_model_schema, validate=True)
+@users_ns.route("/me")
+class MeResource(Resource):
+    @users_ns.expect(user_update_request_model_schema, validate=True)
     @users_ns.response(HTTPStatus.ACCEPTED, "User found", user_schema)
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
     @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
@@ -105,16 +91,76 @@ class UsersResource(Resource):
     @users_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
-    def put(self, id: int) -> Response:
-        """Update an existing user."""
-        user = User.load_user(id)
+    def put(self) -> Response:
+        """Update the currently authenticated user."""
+        user_id = g.current_user["user_id"]
+
+        user = User.load_user(user_id)
         data = request.json
         if not user:
             return {"message": "User not found"}, HTTPStatus.NOT_FOUND
+
         if user.role == UserRole.ADMIN:
             user = User.update_user_as_admin(user, data)
-        else:
-            user = User.update_user_as_admin(user, data)
+        if user.role == UserRole.USER:
+            user = User.update_user_as_user(user, data)
+
+        db.session.commit()
+
+        return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
+
+    @users_ns.response(HTTPStatus.NO_CONTENT, "User deleted")
+    @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
+    @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @users_ns.doc(security=["basic", "jwt"])
+    @auth_required([UserRole.ADMIN, UserRole.USER])
+    def delete(self) -> Response:
+        """Delete the currently authenticated user."""
+        user_id = g.current_user["user_id"]
+        user = User.load_user(user_id)
+        if not user:
+            return {"message": "User not found"}, HTTPStatus.NOT_FOUND
+
+        user.is_active = False
+        db.session.commit()
+        return {"success": True}, HTTPStatus.NO_CONTENT
+
+
+@users_ns.route("/<int:user_id>")
+class UsersResource(Resource):
+    @users_ns.response(HTTPStatus.OK, "User found", user_schema)
+    @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
+    @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
+    @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @users_ns.doc(security=["basic", "jwt"])
+    @auth_required([UserRole.ADMIN, UserRole.USER])
+    def get(self, user_id: int) -> Response:
+        """Retrieve a specific user by ID."""
+        user = User.load_user(user_id)
+
+        if user.role != UserRole.ADMIN or user.id != id:
+            return {"message": "Unauthorized"}, HTTPStatus.UNAUTHORIZED
+
+        return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
+
+    @users_ns.expect(user_update_request_model_schema, validate=True)
+    @users_ns.response(HTTPStatus.ACCEPTED, "User found", user_schema)
+    @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
+    @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
+    @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @users_ns.response(HTTPStatus.FORBIDDEN, "Forbidden")
+    @users_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
+    @users_ns.doc(security=["basic", "jwt"])
+    @auth_required([UserRole.ADMIN])
+    def put(self, user_id: int) -> Response:
+        """Update an existing user."""
+        user = User.load_user(user_id)
+
+        if not user:
+            return {"message": "User not found"}, HTTPStatus.NOT_FOUND
+
+        user.is_active = False
+
         db.session.commit()
 
         return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
@@ -124,9 +170,9 @@ class UsersResource(Resource):
     @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
-    def delete(self, id: int) -> Response:
+    def delete(self, user_id: int) -> Response:
         """Delete a user from the database (admin only)."""
-        user = User.load_user(id)
+        user = User.load_user(user_id)
         if not user:
             return {"message": "User not found"}, HTTPStatus.NOT_FOUND
 
