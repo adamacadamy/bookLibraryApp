@@ -60,33 +60,32 @@ A Book Library App is a software application designed to manage a collection of 
 
 ## 3.4 Book UPDATE AND DELETE Endpoints  [ books.py]
 
-| Method  | Path                   | Description              | Roles              |
-|---------|------------------------|--------------------------|--------------------|
-| PUT     | `/book/<int:book_id>`  | Update a book            | Admin              |
-| DELETE  | `/book/<int:book_id>`  | Delete a book            | Admin              |
-
-## 3.5 Book BARROW AND RETURN Endpoints  [ books.py]
-
-| Method  | Path                   | Description              | Roles              |
-|---------|------------------------|--------------------------|--------------------|
-| POST    | `/barrow/<int:book_id>`| Borrow a book            | User               |
-| POST    | `/return/<int:book_id>`| Return a book            | User               |
-
-# 3.6 Auth Management [ Auth.py]
+| Method  | Path                                | Description              | Roles              |
+|---------|-------------------------------------|--------------------------|--------------------|
+| PUT     | `/book/<int:book_id>`               | Update a book            | Admin              |
+| DELETE  | `/book/<int:book_id>`               | Delete a book            | Admin              |
+| POST    | `/book/images/<string:filename>`    |  De-Authenticate user    | Admin, User        |
+| POST    | `/book/barrow/<int:book_id>`        | Borrow a book            | User               |
+| POST    | `/book/return/<int:book_id>`        | Return a book            | User               |
+ 
+# 3.5 Auth Management [ Auth.py]
 
 | Method | Path         | Description             | Roles               |
 |--------|--------------|-------------------------|---------------------|
 | POST   | `/login`     |  De-Authenticate user   | Admin, User         |
 | POST   | `/logout`    |  Authenticate user      | Admin, User         |  
 
+ 
+
 ## 3.4 Schemas
 
-#### 3.3.1 User Schema
+### 3.3.1 User request Schema
 
 - `id` (Integer, ReadOnly)
+- `full_name` (String, Required)
 - `username` (String, Required)
 - `email` (String, Required, Unique)
-- `password` (String, Required)
+- `password` (String)
 - `Role` (String, Required)
 
 #### 3.4.2 User login Schema  
@@ -94,7 +93,32 @@ A Book Library App is a software application designed to manage a collection of 
 - `username` (String, Required)
 - `password` (String, Required)
 
-### 3.4.3 Book Schema
+
+### 3.4.3 User  Schema
+
+- `id` (Integer, ReadOnly)
+- `full_name` (String, Required)
+- `username` (String, Required)
+- `email` (String, Required, Unique)
+
+### 3.4.4 User response Schema
+
+- `success` (Boolean, Required)
+- `data` (Nested)
+
+### 3.4.5 User update response Schema
+
+- `full_name` (String)
+- `username` (String)
+- `password` (String)
+- `Role` (String,)
+
+### 3.4.6 User login response Schema
+
+- `success` (String)
+- `token` (String,)
+  
+### 3.4.7 Book Schema
 
 - `book_schema_parser` (Parser, Required)
   - `id` (Integer, ReadOnly)
@@ -107,7 +131,7 @@ A Book Library App is a software application designed to manage a collection of 
   - `borrowed_by` (Integer, ReadOnly)
   - `borrowed_unilt` (FileStorage, ReadOnly)
 
-#### 3.4.4 Book Request Schema
+#### 3.4.8 Book Request Schema
 
 - `book_request_schema_parser` (Parser, Required)
   - `title` (String, Required)
@@ -117,26 +141,26 @@ A Book Library App is a software application designed to manage a collection of 
   - `isbn` (String, Required)
 
 
-#### 3.4.5 Book Response Schema
+#### 3.4.9 Book Response Schema
 
 - `success` (Boolean)
 - `data` (Nested, Book Schema, SkipNone=True)
 
-#### 3.4.6 Book List Schema
+#### 3.4.10 Book List Schema
 
 - `success` (Boolean)
 - `data` (List, Nested Book Schema)
 - `total` (Integer)
 - `pages` (Integer)
 
-#### 3.4.7 Book Borrow Schema
+#### 3.4.11 Book Borrow Schema
 
 - `message` (String, Required)
 - `user` (String, Required)
 - `book` (String, Required)
 - `borrowed_unilt`  (Date, Required)
 
-#### 3.4.7 Book Image Schema
+#### 3.4.12 Book Image Schema
 
 - `upload_parser` (Parser, Required)
   

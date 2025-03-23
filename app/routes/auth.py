@@ -3,17 +3,41 @@ from flask_login import logout_user
 from flask_restx import Namespace, Resource
 from flask import request
 
-from app.schemas.user_schema import user_model, user_login_model
-from app.models import db
-from app.models.user import User 
+from app.models.user import UserRole
+from app.schemas.user_schema import user_login_response_schema, user_login_schema
+from app.utils.auth_utils import auth_required, generate_token, verify_user_basic
 
-auth_ns = Namespace("User", description="Authentication management")
- 
+auth_ns = Namespace("Auth", description="Authentication management")
 
-# login 
+
+@auth_ns.route("/login")
 class Login(Resource):
-    pass
+    @auth_ns.expect(user_login_schema, validate=True)
+    @auth_ns.response(HTTPStatus.OK, "Login successful", user_login_response_schema)
+    @auth_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @auth_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
+    def post(self) -> tuple[dict, int]:
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
 
-# lgout
+        user = verify_user_basic(username, password)
+        if not user:
+            return {"message": "Invalid username or password"}, HTTPStatus.UNAUTHORIZED
+
+        token = generate_token(user)
+        return {
+            "success": True,
+            "token": f"Bearer {token}",
+        }, HTTPStatus.OK
+
+
+@auth_ns.route("/logout")
 class Logout(Resource):
-    pass
+    @auth_ns.response(HTTPStatus.OK, "Logout successful")
+    @auth_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @auth_ns.doc(security=["basic", "jwt"])
+    @auth_required([UserRole.ADMIN])
+    def get(self) -> tuple[dict, int]:
+        logout_user()
+        return {"success": True, "message": "Logged out successfully"}, HTTPStatus.OK
