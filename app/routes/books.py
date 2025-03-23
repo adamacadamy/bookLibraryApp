@@ -28,9 +28,6 @@ logger = logging.getLogger(__name__)
 books_ns = Namespace("Book", description="Book management")
 
 
-# /api/Book/?page=1&per_page=10
-# /api/Book/?title=Harry&author=Rowling&genre=Fantasy
-# /api/Book/?page=1&per_page=10&title=Harry&author=Rowling&genre=Fantasy
 @books_ns.route("/")
 class BooksList(Resource):
     @books_ns.response(HTTPStatus.OK, "Books retrieved", book_list_schema)
