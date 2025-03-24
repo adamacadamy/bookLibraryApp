@@ -7,7 +7,7 @@ from flask_migrate import Migrate
 from app.models import db
 from app.models.user import User
 from app.schemas import api
-from app.utils.auth_utils import create_admin_user, init_jwt
+from app.utils.auth_utils import init_jwt
 from app.routes import register_routes
 from app.config.database import (
     SQLALCHEMY_DATABASE_URI,
@@ -48,6 +48,6 @@ def create_app() -> Flask:
     login_manager.user_loader(User.load_user)
 
     # Create all database tables and add an initial admin user
-    create_admin_user(app)
+    User.create_admin_user(app)
 
     return app

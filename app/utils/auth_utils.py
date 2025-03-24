@@ -124,28 +124,3 @@ def auth_required(allowed_roles: Optional[list[UserRole]] = None):
         return wrapper
 
     return decorator
-
-
-def create_admin_user(app: Flask):
-    with app.app_context():
-        db.create_all()
-        admin_username = "admin"
-        admin_email = "admin@admin.com"
-        admin_password = "admin123"  # Change this to a secure password
-        admin_full_name = "Administrator"
-
-        # Check if the admin user already exists
-        admin_user = User.query.filter_by(username=admin_username).first()
-        if not admin_user:
-            admin_user = User.create_user(
-                full_name=admin_full_name,
-                username=admin_username,
-                email=admin_email,
-                password=admin_password,
-                role=UserRole.ADMIN,
-            )
-            db.session.add(admin_user)
-            db.session.commit()
-            logger.info(f"Admin user '{admin_username}' created successfully.")
-        else:
-            logger.info(f"Admin user '{admin_username}' already exists.")
