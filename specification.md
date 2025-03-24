@@ -56,7 +56,7 @@ A Book Library App is a software application designed to manage a collection of 
 | GET     | `/books`                             | View list of books       | Admin, Guest, User |
 | PUT     | `/books/<int:book_id>`               | Update a book            | Admin              |
 | DELETE  | `/books/<int:book_id>`               | Delete a book            | Admin              |
-| POST    | `/books/<int:book_id>/image`         | De-Authenticate user     | Admin, Guest,User  |
+| GET     | `/books/<int:book_id>/image`         | De-Authenticate user     | Admin, Guest,User  |
 | POST    | `/books/<int:book_id>/barrow`        | Borrow a book            | User               |
 | POST    | `/books/<int:book_id>/return`        | Return a book            | User               |
 
