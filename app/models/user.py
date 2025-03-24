@@ -1,10 +1,15 @@
 from enum import Enum
+import logging
 import secrets
 import string
 from flask_login import UserMixin
 
 from app.models import db
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Correct the logging level
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 # Enum for User Roles
