@@ -52,7 +52,7 @@ def send_registration_email(to_email, full_name, username, password):
         msg = MIMEText(email_body, "html", _charset="utf-8")
         msg["From"] = SMTP_EMAIL  # Updated to SMTP_EMAIL
         msg["To"] = to_email
-        msg["Subject"] = "Welcome to Regional Library"
+        msg["Subject"] = "Welcome to My Library"
 
         server = smtplib.SMTP(SMTP_SERVER, int(SMTP_PORT))
         server.starttls()
