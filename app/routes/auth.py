@@ -1,3 +1,4 @@
+import logging
 from http import HTTPStatus
 from flask_login import logout_user
 from flask_restx import Namespace, Resource
@@ -6,6 +7,10 @@ from flask import request
 from app.models.user import UserRole
 from app.schemas.user_schema import user_login_response_schema, user_login_schema
 from app.utils.auth_utils import auth_required, generate_token, verify_user_basic
+
+# Correct the logging level
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 auth_ns = Namespace("Auth", description="Authentication management")
 
