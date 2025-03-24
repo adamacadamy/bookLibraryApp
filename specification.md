@@ -66,7 +66,7 @@ A Book Library App is a software application designed to manage a collection of 
 | Method | Path         | Description             | Roles               |
 |--------|--------------|-------------------------|---------------------|
 | POST   | `/login`     |  De-Authenticate user   | Admin, User         |
-| POST   | `/logout`    |  Authenticate user      | Admin, User         |
+| GET    | `/logout`    |  Authenticate user      | Admin, User         |
 
 ## 3.4 Schemas
 
