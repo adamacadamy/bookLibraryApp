@@ -2,6 +2,8 @@ from enum import Enum
 import logging
 import secrets
 import string
+
+from flask import Flask
 from flask_login import UserMixin
 
 from app.models import db
