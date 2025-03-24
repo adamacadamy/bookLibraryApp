@@ -1,4 +1,4 @@
-## BOOK LIBRARY APP
+## BOOK LIBRARY APP  
 
 A Book Library App is a software application designed to manage a collection of books.
 
@@ -9,6 +9,7 @@ A Book Library App is a software application designed to manage a collection of 
 ### 1.1. User model
 
 - `id` (Primary Key)
+- `full_name` (String)
 - `username` (String, Unique)
 - `password` (String, Hashed)
 - `Role`  (Enum)
@@ -18,12 +19,11 @@ A Book Library App is a software application designed to manage a collection of 
 - `id` (Primary Key)
 - `author` (String Unique)
 - `description` (Text)
-- `image` (Text)
+- `image` (Blob)
 - `isbn` (String Unique)
 - `available` (Bool)
 - `borrowed_by` (Foreign Key)
 - `borrowed_unilt` (Date)
-
 
 ## 2. Activities [BL(Business Logic)]
 
@@ -35,7 +35,8 @@ A Book Library App is a software application designed to manage a collection of 
 
 ## 3. REST API
 
-## 3.1 User UPDATE AND DELETE Endpoints  [ users.py]
+
+## 3.1 User UPDATE AND DELETE Endpoints  [users.py]
 
 | Method | Path                     | Description             | Roles               |
 |--------|--------------------------|-------------------------|---------------------|
@@ -44,10 +45,10 @@ A Book Library App is a software application designed to manage a collection of 
 | PUT    | `/users/<int:user_id>`   | Update a User  account  | Admin               |
 | Delete | `/users/<int:user_id>`   | Delete a User  account  | Admin               |
 | PUT    | `/users/me`              | Update my User account  | Admin, User         |
-| Delete | `/users/me`              | Delete my User account  | Admin, USER         |
+| Delete | `/users/me`              | Delete my User account  | Admin, User         |
 
 
-## 3.3 Book CREATE AND READ Endpoints [ books.py]
+## 3.3 Book CREATE AND READ Endpoints [books.py]
 
 | Method  | Path                                 | Description              | Roles              |
 |---------|--------------------------------------|--------------------------|--------------------|
@@ -55,23 +56,21 @@ A Book Library App is a software application designed to manage a collection of 
 | GET     | `/books`                             | View list of books       | Admin, Guest, User |
 | PUT     | `/books/<int:book_id>`               | Update a book            | Admin              |
 | DELETE  | `/books/<int:book_id>`               | Delete a book            | Admin              |
-| POST    | `/books/<int:book_id>/image`         | De-Authenticate user     | Admin, User        |
+| POST    | `/books/<int:book_id>/image`         | De-Authenticate user     | Admin, Guest,User  |
 | POST    | `/books/<int:book_id>/barrow`        | Borrow a book            | User               |
 | POST    | `/books/<int:book_id>/return`        | Return a book            | User               |
 
 
-# 3.4 Auth Management [ auth.py]
+# 3.4 Auth Management [auth.py]
 
 | Method | Path         | Description             | Roles               |
 |--------|--------------|-------------------------|---------------------|
 | POST   | `/login`     |  De-Authenticate user   | Admin, User         |
-| POST   | `/logout`    |  Authenticate user      | Admin, User         |  
-
-
+| POST   | `/logout`    |  Authenticate user      | Admin, User         |
 
 ## 3.4 Schemas
 
-### 3.3.1 User request Schema
+### 3.3.1 User request Schema [json data]
 
 - `id` (Integer, ReadOnly)
 - `full_name` (String, Required)
@@ -85,45 +84,47 @@ A Book Library App is a software application designed to manage a collection of 
 - `username` (String, Required)
 - `password` (String, Required)
 
-
-### 3.4.3 User  Schema
+### 3.4.3 User raw Schema [user_nested] [json data]
 
 - `id` (Integer, ReadOnly)
 - `full_name` (String, Required)
 - `username` (String, Required)
 - `email` (String, Required, Unique)
 
-### 3.4.4 User response Schema
+### 3.4.4 User response Schema [json data]
 
 - `success` (Boolean, Required)
-- `data` (Nested)
+- `data` (Nested[user_nested], SkipNone=True)
 
-### 3.4.5 User update response Schema
+### 3.4.5 User update response Schema [json data]
 
 - `full_name` (String)
 - `username` (String)
 - `password` (String)
-- `Role` (String,)
-
-### 3.4.6 User login response Schema
-
-- `success` (String)
-- `token` (String,)
+- `Role` (String)
   
-### 3.4.7 Book Schema
+### 3.4.6 User login response Schema[json data]
+
+- `success` (Boolean)
+- `data` (Nested[user_nested])
+- `token` (String,)
+
+
+### 3.4.7 Book Schema [form data]
 
 - `book_schema_parser` (Parser, Required)
   - `id` (Integer, ReadOnly)
   - `title` (String, Required)
   - `description`  (String, Required)
-  - `image` (String, Required)
+  - `image` (Blob, Required)
   - `author` (String, Required)
   - `isbn` (String, Required)
   - `available` (Boolean, ReadOnly)
   - `borrowed_by` (Integer, ReadOnly)
   - `borrowed_unilt` (FileStorage, ReadOnly)
 
-#### 3.4.8 Book Request Schema
+
+#### 3.4.8 Book Request Schema [book_request_schema] [form data]
 
 - `book_request_schema_parser` (Parser, Required)
   - `title` (String, Required)
@@ -133,10 +134,11 @@ A Book Library App is a software application designed to manage a collection of 
   - `isbn` (String, Required)
 
 
+
 #### 3.4.9 Book Response Schema
 
 - `success` (Boolean)
-- `data` (Nested, Book Schema, SkipNone=True)
+- `data` (Nested[book_request_schema],  SkipNone=True)
 
 #### 3.4.10 Book List Schema
 
@@ -147,53 +149,60 @@ A Book Library App is a software application designed to manage a collection of 
 
 #### 3.4.11 Book Borrow Schema
 
-- `message` (String, Required)
-- `user` (String, Required)
-- `book` (String, Required)
+- `user` (Integer, Required)
+- `book` (Integer, Required)
 - `borrowed_unilt`  (Date, Required)
 
 #### 3.4.12 Book Image Schema
 
 - `upload_parser` (Parser, Required)
-  - `image` (FileStorage)  
-  - `name`  (String, Required)  
+  - `image` (Blob)  
+  - `full_name`  (String)  
+  - `username`  (String, Unique)  
+  - `password`  (String, Unique)  
   - `email` (String, Required, Unique)
+  - `Role` (String, Choice[ADMIN, USER, GUEST])
 
 
 ## 5. Scaffold Structure
 
 ```text
 book-library-app/
-├── .gitignore               # Ignore unnecessary files
-├── .env                     # Environment variables
-├── .vscode/                 # VSCode settings
-│   ├── settings.json        # Workspace settings
-│   └── launch.json          # Debugging configurations
-├── app/                     # Application logic
-│   ├── __init__.py          # Initialize Flask app
-│   ├── utils/               # Database models
-│   │   ├── __init__.py      # package file
-│   │   ├── auth_utils.py    # User authentication utilities
-│   ├── models/              # Database models
-│   │   ├── __init__.py      # Initialize models
-│   │   ├── user.py          # User model
-│   │   └── books.py         # Book model
-│   ├── routes/              # Application routes
-│   │   ├── __init__.py      # Initialize routes
-│   │   ├── auth.py          # Authentication routes
-|   |   ├── book.py    # Book borrow and return
-|   |   ├── users.py         # User crud
-│   ├── schemas/             # API schemas
-│   │   ├── __init__.py      # Initialize schemas
-│   │   ├── user_schema.py   # User schema
-│   │   └── book_schema.py   # ToDo schema
-├── migrations/              # Flask-Migrate folder
-├── requirements.txt         # Python dependencies
-├── run.py                   # Application entry point
-└── README.md                # Project documentation
+├── .gitignore                                  # Ignore unnecessary files
+├── .env                                        # Environment variables
+├── .vscode/                                    # VSCode settings
+│   ├── settings.json                           # Workspace settings
+│   └── launch.json                             # Debugging configurations
+├── app/                                        # Application logic
+│   ├── __init__.py                             # Initialize Flask app
+│   ├── email_templates/                        # html jinja email templates direcotry
+│   │   └── registration_email_template.html    # registration email jinja template file
+│   ├── utils/                                  # Database models
+│   │   ├── __init__.py                         # package file
+│   │   ├── auth_utils.py                       # User authentication utilities
+|   |   ├── date_utils.py                       # date retated utility functions 
+│   │   ├── file_utils.py                       # files retated utility functions 
+|   |   └── email_utils.py                      # email retated utility functions 
+│   ├── models/                                 # Database models
+│   │   ├── __init__.py                         # Initialize models
+│   │   ├── user.py                             # User model
+│   │   └── books.py                            # Book model
+│   ├── routes/                                 # Application routes
+│   │   ├── __init__.py                         # Initialize routes
+│   │   ├── auth.py                             # Authentication routes
+|   |   ├── book.py                             # Book borrow and return
+|   |   ├── users.py                            # User crud
+│   ├── schemas/                                # API schemas
+│   │   ├── __init__.py                         # Initialize schemas
+│   │   ├── user_schema.py                      # User schema
+│   │   └── book_schema.py                      # ToDo schema
+├── migrations/                                 # Flask-Migrate folder
+├── requirements.txt                            # Python dependencies
+├── run.py                                      # Application entry point
+└── README.md                                   # Project documentation
 ```
 
-## 6. JSON  version of the scaffold
+## 6. JSON version of the scaffold
 
 ```json
 {
@@ -205,9 +214,20 @@ book-library-app/
     },
     "app": {
         "__init__.py": "",
+        "email_templates": {
+            "registration_email_template.html": ""
+        },
+        "config.py": {
+            "database.py": "",
+            "email.py": "",
+            "upload.py": ""
+        },
         "utils": {
             "__init__.py": "",
-            "auth_utils.py": ""
+            "auth_utils.py": "",
+            "date_utils.py": "",
+            "email_utils.py": "",
+            "file_utils.py": ""
         },
         "models": {
             "__init__.py": "",
@@ -217,9 +237,7 @@ book-library-app/
         "routes": {
             "__init__.py": "",
             "auth.py": "",
-            "book_items.py": "",
-            "books_list.py": "",
-            "book_cycle.py": "",
+            "book.py": "",
             "users.py": ""
         },
         "schemas": {
@@ -233,10 +251,4 @@ book-library-app/
     "run.py": "",
     "README.md": ""
 }
-```
-
-## 8. Run Scaffold generator
-
-```python
-python3 create_flask_project.py book_library_structure.json -d book-library-app
 ```
