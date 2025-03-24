@@ -132,6 +132,8 @@ class UsersResource(Resource):
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
     @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
     @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @users_ns.response(HTTPStatus.FORBIDDEN, "Forbidden")
+    @users_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
     def get(self, user_id: int) -> Response:
@@ -168,6 +170,8 @@ class UsersResource(Resource):
     @users_ns.response(HTTPStatus.NO_CONTENT, "User deleted")
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
     @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
+    @users_ns.response(HTTPStatus.FORBIDDEN, "Forbidden")
+    @users_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN])
     def delete(self, user_id: int) -> Response:
