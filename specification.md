@@ -43,9 +43,9 @@ A Book Library App is a software application designed to manage a collection of 
 | POST   | `/users`                 | Register a new user     | Admin               |
 | GET    | `/users`                 | View list of users      | Admin               |
 | PUT    | `/users/<int:user_id>`   | Update a User  account  | Admin               |
-| Delete | `/users/<int:user_id>`   | Delete a User  account  | Admin               |
+| DELETE | `/users/<int:user_id>`   | Delete a User  account  | Admin               |
 | PUT    | `/users/me`              | Update my User account  | Admin, User         |
-| Delete | `/users/me`              | Delete my User account  | Admin, User         |
+| DELETE | `/users/me`              | Delete my User account  | Admin, User         |
 
 
 ## 3.3 Book CREATE AND READ Endpoints [books.py]
