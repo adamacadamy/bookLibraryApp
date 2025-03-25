@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 import logging
 import mimetypes
@@ -16,6 +17,7 @@ from app.schemas.book_schema import (
     book_borrow_schema,
     book_request_schema_parser,
     book_query_parser,
+    book_borrow_model,
 )
 from app.models.user import UserRole
 
@@ -197,29 +199,44 @@ class BookServeImage(Resource):
 
 @books_ns.route("/<int:book_id>/barrow")
 class BookBorrowResrouce(Resource):
+
+    @books_ns.expect(book_borrow_model, validate=True)  # Use the model here
     @books_ns.response(HTTPStatus.CREATED, "Book borrowed", book_borrow_schema)
     @books_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
     @books_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
     @books_ns.response(HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server issue")
-    @books_ns.doc(security=["basic, jwt"])
+    @books_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])
     def put(self, book_id: int) -> Response:
         """Borrow a book from the library."""
         try:
-            args = book_schema_parser.parse_args()
+            data = request.json  # Parse the JSON body directly
+            borrowed_until = data.get(
+                "borrowed_until"
+            )  # This will be a string in "YYYY-MM-DD" format
+
+            # Validate the date format
+            try:
+                borrowed_until_date = datetime.strptime(borrowed_until, "%Y-%m-%d")
+            except ValueError:
+                return {
+                    "message": "Invalid date format. Use YYYY-MM-DD."
+                }, HTTPStatus.BAD_REQUEST
+
             book = Book.query.get(book_id)
             user_id = g.current_user["user_id"]
             user = User.query.get(user_id)
+
             if book and user:
                 book.borrowed_by = user.id
-                book.borrowed_until = args["borrowed_until"]
+                book.borrowed_until = borrowed_until_date
                 book.available = False
                 db.session.commit()
                 return {
                     "message": "Book borrowed",
                     "user": user.username,
                     "book": book.title,
-                    "borrowed_until": book.borrowed_until,
+                    "borrowed_until": borrowed_until_date.isoformat(),
                 }, HTTPStatus.CREATED
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")

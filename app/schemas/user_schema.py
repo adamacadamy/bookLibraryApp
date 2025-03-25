@@ -23,7 +23,16 @@ user_query_parser.add_argument(
 user_query_parser.add_argument(
     "role", type=str, required=False, help="Filter by user role"
 )
-
+book_borrow_model = api.model(
+    "BookBorrow",  # Model name
+    {
+        "borrowed_until": fields.Date(
+            required=True,
+            description="The date until the book is borrowed (format: YYYY-MM-DD)",
+            example="2025-04-01",
+        ),
+    },
+)
 
 user_request_model_schema = api.model(
     "UserRequestModel",

@@ -1,10 +1,20 @@
 from flask_restx import fields, reqparse
 from werkzeug.datastructures import FileStorage
+from datetime import datetime
 
 
 from app.schemas import api
 
 
+# Define the schema parser for borrowing a book
+book_borrow_schema_parser = reqparse.RequestParser()
+book_borrow_schema_parser.add_argument(
+    "borrowed_until",
+    type=lambda x: datetime.strptime(x, "%Y-%m-%d").date(),  # Parse string to date
+    required=True,
+    help="The date until the book is borrowed (format: YYYY-MM-DD).",
+    location="json",
+)
 # Define the schema parser for query parameters
 book_query_parser = reqparse.RequestParser()
 book_query_parser.add_argument(
@@ -122,5 +132,16 @@ book_borrow_schema = api.model(
         "user": fields.String(required=True),
         "book": fields.String(required=True),
         "borrowed_unilt": fields.Date(required=True),
+    },
+)
+
+book_borrow_model = api.model(
+    "BookBorrow",  # Model name
+    {
+        "borrowed_until": fields.Date(
+            required=True,
+            description="The date until the book is borrowed (format: YYYY-MM-DD)",
+            example="2025-04-01",
+        ),
     },
 )

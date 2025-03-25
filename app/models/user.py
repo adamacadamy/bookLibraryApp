@@ -247,6 +247,7 @@ class User(db.Model, UserMixin):
         ]
 
         with app.app_context():
+            db.create_all()
             for user_data in users:
                 existing_user = User.query.filter_by(email=user_data["email"]).first()
                 if not existing_user:

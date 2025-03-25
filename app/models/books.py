@@ -20,7 +20,7 @@ class Book(db.Model):
     isbn = db.Column(db.String(13), unique=True, nullable=False)
     available = db.Column(db.Boolean, default=True)
     borrowed_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    borrowed_unilt = db.Column(db.DateTime, nullable=True)
+    borrowed_until = db.Column(db.DateTime, nullable=True)
 
     def to_dict(self):
         return {
@@ -32,8 +32,8 @@ class Book(db.Model):
             "available": self.available,
             "borrowed_by": self.borrowed_by,
             "borrowed_unilt": (
-                self.borrowed_unilt.isoformat()
-                if self.borrowed_unilt is not None
+                self.borrowed_until.isoformat()
+                if self.borrowed_until is not None
                 else ""
             ),
         }
