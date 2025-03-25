@@ -29,21 +29,46 @@ class UsersList(Resource):
         """Retrieve a list of users with pagination and filtering."""
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
+        full_name = request.args.get("full_name", type=str)
         username = request.args.get("username", type=str)
         email = request.args.get("email", type=str)
         role = request.args.get("role", type=str)
 
+        # SELECT * FROM users
         query = User.query
+
         if username:
+            # username = admin
+            # SELECT * FROM users WHERE username LIKE %admin%
             query = query.filter(User.username.ilike(f"%{username}%"))
+
         if email:
+            # email=admin@admin
+            # SELECT * FROM users WHERE username LIKE %admin% AND
+            #  email LIKE %admin@admin%
             query = query.filter(User.email.ilike(f"%{email}%"))
         if role:
+            # role=ADMIN
+            # SELECT * FROM users WHERE username LIKE %admin% AND
+            # email LIKE %admin@admin AND
+            # role LIKE %ADMIN%
             query = query.filter(User.role.ilike(f"%{role}%"))
-
+        if full_name:
+            # full_name="adam"
+            # SELECT * FROM users WHERE username LIKE  %admin% AND
+            # email like  %admin@admin% AND
+            # role like %ADMIN% AND
+            # full_name  like %adam%
+            query = query.filter(User.role.ilike(f"%{full_name}%"))
+        # full_name="adam"
+        # SELECT * FROM users WHERE username LIKE  %admin% AND
+        # email like  %admin@admin% AND
+        # role like %ADMIN% AND
+        # full_name  like %adam%
+        # lMIT= per_page
+        # OFFSET =page
         users_query = query.paginate(page=page, per_page=per_page, error_out=False)
         users = users_query.items
-
         return {
             "success": True,
             "data": [user.to_dict() for user in users],
