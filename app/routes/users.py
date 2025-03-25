@@ -176,7 +176,7 @@ class UsersResource(Resource):
         return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
 
     @users_ns.expect(user_update_request_model_schema, validate=True)
-    @users_ns.response(HTTPStatus.ACCEPTED, "User updated", user_schema)
+    @users_ns.response(HTTPStatus.ACCEPTED, "User found", user_schema)
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
     @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
     @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
@@ -235,6 +235,7 @@ class UsersResource(Resource):
 
         if user.role == UserRole.ADMIN:
             return {"message": "Forbidden"}, HTTPStatus.FORBIDDEN
-        db.session.delete(user)
+        user.is_active = False
+        # db.session.delete(user)
         db.session.commit()
         return {"success": True}, HTTPStatus.NO_CONTENT
