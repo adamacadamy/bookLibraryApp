@@ -250,7 +250,7 @@ class User(db.Model, UserMixin):
             for user_data in users:
                 existing_user = User.query.filter_by(email=user_data["email"]).first()
                 if not existing_user:
-                    new_user = User(
+                    new_user = User.create_user(
                         full_name=user_data["full_name"],
                         username=user_data["username"],
                         email=user_data["email"],

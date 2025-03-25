@@ -176,7 +176,7 @@ class UsersResource(Resource):
         return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
 
     @users_ns.expect(user_update_request_model_schema, validate=True)
-    @users_ns.response(HTTPStatus.ACCEPTED, "User found", user_schema)
+    @users_ns.response(HTTPStatus.ACCEPTED, "User updated", user_schema)
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
     @users_ns.response(HTTPStatus.BAD_REQUEST, "Invalid input")
     @users_ns.response(HTTPStatus.UNAUTHORIZED, "Unauthorized")
@@ -191,11 +191,34 @@ class UsersResource(Resource):
         if not user:
             return {"message": "User not found"}, HTTPStatus.NOT_FOUND
 
-        user.is_active = False
+        # Parse the input data
+        data = request.json
 
-        db.session.commit()
+        # Update allowed fields
+        if "full_name" in data:
+            user.full_name = data["full_name"]
+        if "username" in data:
+            user.username = data["username"]
+        if "email" in data:
+            user.email = data["email"]
+        if "role" in data:
+            if user.role == UserRole.ADMIN and data["role"] != UserRole.ADMIN:
+                return {
+                    "message": "Cannot change role of an admin user"
+                }, HTTPStatus.FORBIDDEN
+            user.role = data["role"]
+        if "is_active" in data:
+            user.is_active = data["is_active"]
 
-        return {"success": True, "data": user.to_dict()}, HTTPStatus.OK
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {
+                "message": f"Failed to update user: {str(e)}"
+            }, HTTPStatus.INTERNAL_SERVER_ERROR
+
+        return {"success": True, "data": user.to_dict()}, HTTPStatus.ACCEPTED
 
     @users_ns.response(HTTPStatus.NO_CONTENT, "User deleted")
     @users_ns.response(HTTPStatus.NOT_FOUND, "User not found")
