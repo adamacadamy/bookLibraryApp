@@ -48,7 +48,7 @@ def create_app() -> Flask:
 
     login_manager.user_loader(User.load_user)
 
-    User.create_admin_user(app)
+    User.create_initial_users(app)
     Book.creat_inital_books(app)
 
     return app

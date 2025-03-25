@@ -94,26 +94,171 @@ class User(db.Model, UserMixin):
         return User.query.get(int(user_id))
 
     @staticmethod
-    def create_admin_user(app: Flask):
-        with app.app_context():
-            db.create_all()
-            admin_username = "admin"
-            admin_email = "admin@admin.com"
-            admin_password = "admin123"  # Change this to a secure password
-            admin_full_name = "Administrator"
+    def create_initial_users(app):
+        """Create initial users if they do not already exist."""
+        users = [
+            {
+                "full_name": "Admin",
+                "username": "admin",
+                "email": "admin@admin.com",
+                "role": UserRole.ADMIN,
+                "password": "admin123",
+            },
+            {
+                "full_name": "Alice Johnson",
+                "username": "alicej",
+                "email": "alice.johnson@example.com",
+                "role": UserRole.ADMIN,
+                "password": "AliceSecure1!",
+            },
+            {
+                "full_name": "Bob Smith",
+                "username": "bobsmith",
+                "email": "bob.smith@example.com",
+                "role": UserRole.USER,
+                "password": "BobStrongPwd2@",
+            },
+            {
+                "full_name": "Charlie Evans",
+                "username": "charliee",
+                "email": "charlie.evans@example.com",
+                "role": UserRole.GUEST,
+                "password": "CharlieGuest3#",
+            },
+            {
+                "full_name": "Diana Lopez",
+                "username": "dianal",
+                "email": "diana.lopez@example.com",
+                "role": UserRole.USER,
+                "password": "DianaUser4$",
+            },
+            {
+                "full_name": "Ethan Brown",
+                "username": "ethanb",
+                "email": "ethan.brown@example.com",
+                "role": UserRole.ADMIN,
+                "password": "EthanAdmin5%",
+            },
+            {
+                "full_name": "Fiona Garcia",
+                "username": "fionag",
+                "email": "fiona.garcia@example.com",
+                "role": UserRole.GUEST,
+                "password": "FionaGuest6^",
+            },
+            {
+                "full_name": "George Miller",
+                "username": "georgem",
+                "email": "george.miller@example.com",
+                "role": UserRole.USER,
+                "password": "GeorgeUser7&",
+            },
+            {
+                "full_name": "Hannah Wilson",
+                "username": "hannahw",
+                "email": "hannah.wilson@example.com",
+                "role": UserRole.ADMIN,
+                "password": "HannahAdmin8*",
+            },
+            {
+                "full_name": "Ian Clark",
+                "username": "ianclark",
+                "email": "ian.clark@example.com",
+                "role": UserRole.USER,
+                "password": "IanUser9(",
+            },
+            {
+                "full_name": "Julia Martinez",
+                "username": "juliam",
+                "email": "julia.martinez@example.com",
+                "role": UserRole.GUEST,
+                "password": "JuliaGuest0)",
+            },
+            {
+                "full_name": "Kevin Harris",
+                "username": "kevinh",
+                "email": "kevin.harris@example.com",
+                "role": UserRole.USER,
+                "password": "KevinPass11!",
+            },
+            {
+                "full_name": "Laura Lewis",
+                "username": "laural",
+                "email": "laura.lewis@example.com",
+                "role": UserRole.ADMIN,
+                "password": "LauraSecure12@",
+            },
+            {
+                "full_name": "Michael Young",
+                "username": "michaely",
+                "email": "michael.young@example.com",
+                "role": UserRole.USER,
+                "password": "MichaelStrong13#",
+            },
+            {
+                "full_name": "Nina Scott",
+                "username": "ninas",
+                "email": "nina.scott@example.com",
+                "role": UserRole.GUEST,
+                "password": "NinaGuest14$",
+            },
+            {
+                "full_name": "Oscar Adams",
+                "username": "oscara",
+                "email": "oscar.adams@example.com",
+                "role": UserRole.USER,
+                "password": "OscarPass15%",
+            },
+            {
+                "full_name": "Paula Roberts",
+                "username": "paular",
+                "email": "paula.roberts@example.com",
+                "role": UserRole.ADMIN,
+                "password": "PaulaSecure16^",
+            },
+            {
+                "full_name": "Quentin Baker",
+                "username": "quentinb",
+                "email": "quentin.baker@example.com",
+                "role": UserRole.GUEST,
+                "password": "QuentinGuest17&",
+            },
+            {
+                "full_name": "Rachel Turner",
+                "username": "rachelt",
+                "email": "rachel.turner@example.com",
+                "role": UserRole.USER,
+                "password": "RachelUser18*",
+            },
+            {
+                "full_name": "Samuel Phillips",
+                "username": "samuelp",
+                "email": "samuel.phillips@example.com",
+                "role": UserRole.USER,
+                "password": "SamuelSecure19(",
+            },
+            {
+                "full_name": "Tina Watson",
+                "username": "tinaw",
+                "email": "tina.watson@example.com",
+                "role": UserRole.GUEST,
+                "password": "TinaGuest20)",
+            },
+        ]
 
-            # Check if the admin user already exists
-            admin_user = User.query.filter_by(username=admin_username).first()
-            if not admin_user:
-                admin_user = User.create_user(
-                    full_name=admin_full_name,
-                    username=admin_username,
-                    email=admin_email,
-                    password=admin_password,
-                    role=UserRole.ADMIN,
-                )
-                db.session.add(admin_user)
-                db.session.commit()
-                logger.info(f"Admin user '{admin_username}' created successfully.")
-            else:
-                logger.info(f"Admin user '{admin_username}' already exists.")
+        with app.app_context():
+            for user_data in users:
+                existing_user = User.query.filter_by(email=user_data["email"]).first()
+                if not existing_user:
+                    new_user = User(
+                        full_name=user_data["full_name"],
+                        username=user_data["username"],
+                        email=user_data["email"],
+                        role=user_data["role"],
+                        password=user_data["password"],
+                    )
+                    db.session.add(new_user)
+                    db.session.commit()
+                    logger.info(f"Added user: {user_data['full_name']}")
+                else:
+                    logger.info(f"user '{user_data['full_name']}' already exists.")
