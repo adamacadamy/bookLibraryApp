@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 
 from app.models import db
+from app.models.books import Book
 from app.models.user import User
 from app.schemas import api
 from app.utils.auth_utils import init_jwt
@@ -47,7 +48,7 @@ def create_app() -> Flask:
 
     login_manager.user_loader(User.load_user)
 
-    # Create all database tables and add an initial admin user
     User.create_admin_user(app)
+    Book.creat_inital_books(app)
 
     return app

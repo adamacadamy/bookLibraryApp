@@ -7,6 +7,7 @@ from app.schemas.user_schema import (
     user_request_model_schema,
     user_schema,
     user_update_request_model_schema,
+    user_query_parser,
 )
 from app.models import db
 from app.models.user import User, UserRole
@@ -19,6 +20,8 @@ users_ns = Namespace("User", description="User management")
 
 @users_ns.route("/")
 class UsersList(Resource):
+
+    @users_ns.expect(user_query_parser, validate=True)
     @users_ns.response(HTTPStatus.OK, "List of users", user_response_schema)
     @users_ns.doc(security=["basic", "jwt"])
     @auth_required([UserRole.ADMIN, UserRole.USER])

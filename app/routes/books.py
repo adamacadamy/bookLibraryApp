@@ -15,6 +15,7 @@ from app.schemas.book_schema import (
     book_response_schema,
     book_borrow_schema,
     book_request_schema_parser,
+    book_query_parser,
 )
 from app.models.user import UserRole
 
@@ -30,6 +31,8 @@ books_ns = Namespace("Book", description="Book management")
 
 @books_ns.route("/")
 class BooksList(Resource):
+
+    @books_ns.expect(book_query_parser, validate=True)
     @books_ns.response(HTTPStatus.OK, "Books retrieved", book_list_schema)
     def get(self) -> Response:
         """Retrieve a list of books with pagination and filtering."""
@@ -37,15 +40,15 @@ class BooksList(Resource):
         per_page = request.args.get("per_page", 10, type=int)
         title = request.args.get("title", type=str)
         author = request.args.get("author", type=str)
-        genre = request.args.get("genre", type=str)
+        description = request.args.get("description", type=str)
 
         query = Book.query
         if title:
             query = query.filter(Book.title.ilike(f"%{title}%"))
         if author:
             query = query.filter(Book.author.ilike(f"%{author}%"))
-        if genre:
-            query = query.filter(Book.genre.ilike(f"%{genre}%"))
+        if description:
+            query = query.filter(Book.genre.ilike(f"%{description}%"))
 
         books_query = query.paginate(page=page, per_page=per_page, error_out=False)
         books = books_query.items

@@ -4,17 +4,35 @@ from werkzeug.datastructures import FileStorage
 
 from app.schemas import api
 
-book_schema_parser = reqparse.RequestParser()
 
+# Define the schema parser for query parameters
+book_query_parser = reqparse.RequestParser()
+book_query_parser.add_argument(
+    "page", type=int, default=1, help="Page number for pagination"
+)
+book_query_parser.add_argument(
+    "per_page", type=int, default=10, help="Number of items per page"
+)
+book_query_parser.add_argument(
+    "title", type=str, required=False, help="Filter by book title"
+)
+book_query_parser.add_argument(
+    "author", type=str, required=False, help="Filter by book author"
+)
+book_query_parser.add_argument(
+    "description", type=str, required=False, help="Filter by book description"
+)
 
-book_request_schema_parser = reqparse.RequestParser()
-
+book_schema_parser = reqparse.RequestParser()  # form data schema
+#  input text
 book_schema_parser.add_argument(
     "title", type=str, required=True, help="Book title is required"
 )
+#  input text
 book_schema_parser.add_argument(
     "description", type=str, required=True, help="Book description is requireed"
 )
+#  input file/upload
 book_schema_parser.add_argument(
     "image",
     type=FileStorage,
@@ -22,20 +40,26 @@ book_schema_parser.add_argument(
     location="files",
     help="Image file is required",
 )
+#  input text
 book_schema_parser.add_argument(
     "author", type=str, required=True, help="Book author is requireed"
 )
+#  input text
 book_schema_parser.add_argument(
     "isbn", type=str, required=True, help="Book isbn number is requireed"
 )
 
 
+book_request_schema_parser = reqparse.RequestParser()  # form data schema
+#  input text
 book_request_schema_parser.add_argument(
     "title", type=str, required=False, help="Book title is required"
 )
+#  input text
 book_request_schema_parser.add_argument(
     "description", type=str, required=False, help="Book description is requireed"
 )
+#  input file/upload
 book_request_schema_parser.add_argument(
     "image",
     type=FileStorage,
@@ -43,12 +67,15 @@ book_request_schema_parser.add_argument(
     location="files",
     help="Image file is required",
 )
+#  input text
 book_request_schema_parser.add_argument(
     "author", type=str, required=False, help="Book author is requireed"
 )
+#  input text
 book_request_schema_parser.add_argument(
     "isbn", type=str, required=False, help="Book isbn number is requireed"
 )
+
 
 book_schema = api.model(
     "BookModel",
@@ -65,6 +92,7 @@ book_schema = api.model(
 )
 
 
+# json data schema
 book_response_schema = api.model(
     "BookResponseModel",
     {
@@ -73,6 +101,7 @@ book_response_schema = api.model(
     },
 )
 
+# json data schema
 book_list_schema = api.model(
     "BookListResponseModel",
     {
@@ -85,6 +114,7 @@ book_list_schema = api.model(
     },
 )
 
+# json data schema
 book_borrow_schema = api.model(
     "BookBorrowResponseModel",
     {
